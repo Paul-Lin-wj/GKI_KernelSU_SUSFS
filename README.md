@@ -24,11 +24,26 @@
 
 ---
 
+## 最近更新
+
+1. 并行工作流磁盘清理，增加整体速度
+2. 修复拉取源码、仓库、工具概率失败的问题
+3. 同步上游SUSFS更新，兼容不被支持的GKI版本
+4. 翻新网页UI风格
+5. RELEASE 新上传 SUSFS补丁，对应 **上游的 `50_add_susfs_in_gki-内核版本.patch`和其他文件**（除了 `10_enable_susfs_for_ksu.patch`，它已被 sukisu 内置），可替代使用，不会产生SUSFS侧的报错，不会构建内核则不需要,通常在源码目录拉取sukisu然后执行本补丁，就可运行构建脚本或bash命令进行了，省略很多步骤
+6. 新增 **NoMount 挂载元模块**（构建时可选开关）：在内核 `fs/` 层集成 [maxsteeel/NoMount](https://github.com/maxsteeel/nomount)，提供无需传统挂载点的模块挂载方案，可与任意 KSU 变体及 SUSFS 共存。开启后需自行刷入配套的 NoMount 模块使用
+7. 新增 **网络增强**（构建时可选开关，默认关闭）：BBRv3 等网络功能增强
+
 ## ⚠️ 兼容性提醒
 
 > **注意：** 目前不支持一加 ColorOS 14、15，刷入后可能需要清除数据开机。
+>
+> **SUKISU最新版:** 已经恢复构建，但不兼容6.12
+>
+> 增加了老版本SukiSU的构建，若使用老版本内核最好搭配同样版本的管理器，老版本完全使用以前的SUKISU和SUSFS代码，因此不包含最近的特性或bug
+> 
+> <img width="296" height="152" alt="image" src="https://github.com/user-attachments/assets/e60316c3-c760-4178-a4c8-b94d0ef0b5b2" />
 
-> **rekernel功能（测试）：已支持 rekernel 功能（目前处于测试阶段）**
 
 
 ---
@@ -43,86 +58,8 @@ Wiki 涵盖内容：
 - 💡 使用技巧 Tips
 - 🆘 救砖指南
 - 📊 内核版本兼容性说明
+- 🧩 [**进阶功能文档**](docs/advanced-features.md)：GhostLock 安全修复、Droidspaces 容器支持、自定义提交配置、伪装 `/proc/config.gz`
 
----
-
-## 🧪 Droidspaces 容器支持（实验性）
-
-> **实验性功能：** 不保证所有 GKI 版本均能成功构建或启动，刷入前请务必备份 Boot 镜像。
->
-> **TIPS：** 工作流使用的是 [Droidspaces](https://github.com/ravindu644/Droidspaces-OSS) 的 [官方补丁](https://github.com/ravindu644/Droidspaces-OSS/tree/main/Documentation/resources/kernel-patches/GKI) ，如有更好的补丁可以提个issues，此外由于存在三个补丁，或许需要反复试验以确保其中一个适配你的机型，请根据他人或实际经验来选择。
-
-[Droidspaces](https://github.com/ravindu644/Droidspaces-OSS) 是一个轻量级的 Linux 容器工具，可以在 Android 上运行完整的 Linux 环境（支持 systemd、OpenRC 等），用于搭建开发环境、运行服务器等场景。
-
-**支持范围：** 5.10 / 5.15 / 6.1 / 6.6 / 6.12
-
-**使用方式：** 在手动触发构建时，选择 `Droidspaces 容器支持` 选项：
-
-| 选项 | 说明 |
-|:---:|:---|
-| `off` | 关闭（默认） |
-| `678` | 使用 6_7_8 槽位补丁（推荐） |
-| `123` | 使用 1_2_3 槽位补丁（备用） |
-| `345` | 使用 3_4_5 槽位补丁（备用） |
-
-> **提示：** 6.12 内核仅有一个补丁，选择任意非关闭选项即可。
-
-**如果构建失败或刷入后 bootloop：** 可尝试切换到其他槽位补丁（如 678 → 123 或 345），不同内核子版本可能适用不同的补丁。
-
-## 🔧 自定义提交配置
-通过 [`config/config`](config/config) 文件可以指定 SUSFS 和 SukiSU 使用特定的 commit。
-
-**什么是提交 (commit)？**
-
-提交是一串哈希字符串，代表仓库在某个时间点的状态。例如将 sukisu 设为 `4b8644515fe6d87a109129e590ccd9d33a855dca`，即使用 1 月 30 日的 SukiSU 版本编译内核。
-
-**为什么要指定提交？**
-
-- 当上游仓库更新引入 bug 或兼容性问题时，可回退到稳定版本
-- 当 SUSFS 与 SukiSU 版本不同步导致编译失败时，可手动指定兼容的版本
-
-**如何获取提交哈希？**
-
-- SUSFS: [susfs4ksu](https://gitlab.com/simonpunk/susfs4ksu)
-- SukiSU: [SukiSU-Ultra commits/builtin](https://github.com/SukiSU-Ultra/SukiSU-Ultra/commits/builtin/)
-
-以 SUSFS 为例，先选择分支，再复制对应提交的哈希值：
-
-![选择分支](assets/susfs_branch.png)
-![复制提交](assets/susfs_commit.png)
-
-```ini
-# 启用自定义提交
-custom=true
-
-# SUSFS 各分支的 commit hash
-gki-android12-5.10=
-gki-android13-5.15=
-gki-android14-6.1=
-gki-android15-6.6=
-
-# SukiSU 的 commit hash
-sukisu=
-```
-
-> 留空则使用该分支的最新提交。
-
----
-
-## 🧪 伪装 `/proc/config.gz`（Stock Config）
-
-这是一个进阶技巧，不需要在工作流里手动开关。  
-构建时会自动检测 `config/stock_defconfig` 是否存在：存在则应用，不存在则跳过。
-
-使用方法：
-1. 确保设备当前是官方 ROM + 官方内核。
-2. 获取设备上的 `/proc/config.gz`（可在手机端或电脑端操作）。
-3. 解压后重命名为 `stock_defconfig`，上传到仓库 [`config/`](config/) 目录并提交（可直接在手机端完成）。
-
-构建流程会自动：
-- 复制到内核源码：`$KERNEL_ROOT/common/arch/arm64/configs/stock_defconfig`
-- 在 `$KERNEL_ROOT/common/kernel/Makefile` 中将 `$(obj)/config_data` 规则从 `$(KCONFIG_CONFIG)` 切换为 `arch/arm64/configs/stock_defconfig`
-- 使编译产物中的 `/proc/config.gz` 更贴近你的官方内核配置
 ---
 
 ## 🛠️ 安装后推荐
