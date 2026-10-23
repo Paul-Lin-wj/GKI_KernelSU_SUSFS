@@ -144,6 +144,29 @@ fi
 
 patch -p1 < "$SUSFS_PATCH" || true
 
+# Android 14 6.1 部分子版本（6.1.118/6.1.138）的 namespace.c 已不再包含
+# trace/hooks/blk.h，而 SUSFS 主补丁首个 hunk 以该行为上下文，导致
+# susfs_def.h 头文件和 SUS_MOUNT 的 extern 声明整段被拒绝；后续补丁代码
+# 引用这些符号会直接编译失败。这里按补丁原本的意图补齐，并清掉 .rej。
+if [[ "$ANDROID_VERSION" == "android14" && "$KERNEL_VERSION" == "6.1" ]] \
+  && ! grep -qF '#include <linux/susfs_def.h>' fs/namespace.c; then
+  echo "修复 Android 14 6.1 namespace.c 缺失的 SUSFS 头文件与声明"
+  cat > /tmp/susfs_namespace_fix.h <<'SUSFS_NS_FIX'
+#ifdef CONFIG_KSU_SUSFS
+#include <linux/susfs_def.h>
+#endif // #ifdef CONFIG_KSU_SUSFS
+
+#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+extern bool susfs_is_current_ksu_domain(void);
+extern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;
+
+#define CL_COPY_MNT_NS BIT(25) /* used by copy_mnt_ns() */
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+SUSFS_NS_FIX
+  sed -i '/^#include "internal.h"$/r /tmp/susfs_namespace_fix.h' fs/namespace.c
+  rm -f fs/namespace.c.rej
+fi
+
 # 为尚未提供 SU 会话 FD 接口的 SukiSU/BakaSU 恢复旧版 exec hook 行为
 EXEC_HELPER=""
 if [[ "$KSU_VARIANT" == SukiSU* || "$KSU_VARIANT" == "BakaSU" ]]; then

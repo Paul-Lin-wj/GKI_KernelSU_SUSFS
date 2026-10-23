@@ -539,8 +539,11 @@ jobs:
           variant_input="${{ inputs.ksu_variant }}"
 
           case "$variant_input" in
-            "Official"|"BakaSU")
+            "Official")
               BRANCH="-s main"
+              ;;
+            "BakaSU")
+              BRANCH="-s dac2d186406a0d2b0ce3c67cad5a1fa1adbf9f4d"
               ;;
             "SukiSU")
               if [ "${{ inputs.enable_susfs }}" = "false" ]; then
