@@ -1003,6 +1003,10 @@ jobs:
           # 不需要像 SYSVIPC/IPC_NS 那样额外打 padding 补丁。与 wild_kernel 保持一致，全版本启用。
           enable_config CONFIG_USER_NS
 
+          # Droidspaces 可选限制：CPU 带宽 / 进程数
+          enable_config CONFIG_CFS_BANDWIDTH
+          enable_config CONFIG_CGROUP_PIDS
+
           # 可选: 网络相关配置 (Docker/NAT 模式)
           enable_config_if_defined CONFIG_NETFILTER_XT_MATCH_ADDRTYPE
           enable_config_if_defined CONFIG_NETFILTER_XT_TARGET_LOG
