@@ -542,6 +542,9 @@ jobs:
             "Official"|"BakaSU")
               BRANCH="-s main"
               ;;
+            "ReSukiSU")
+              BRANCH="-s v4.2.0-rc3"
+              ;;
             "SukiSU")
               if [ "${{ inputs.enable_susfs }}" = "false" ]; then
                 BRANCH="-s main"
@@ -612,6 +615,10 @@ jobs:
             "BakaSU")
               echo "添加 BakaSU..."
               curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash $BRANCH
+              ;;
+            "ReSukiSU")
+              echo "添加 ReSukiSU..."
+              curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash $BRANCH
               ;;
             *)
               if [ -z "$LEGACY_SUKISU_CONFIG" ]; then

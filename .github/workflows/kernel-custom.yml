@@ -30,6 +30,7 @@ on:
           - SukiSU(40726)
           - SukiSU(40548)
           - BakaSU
+          - ReSukiSU
         default: BakaSU
       ksu_mode:
         description: "KernelSU / SUSFS 模式"
@@ -230,6 +231,7 @@ jobs:
       artifact_upload_mode: ${{ inputs.artifact_upload_mode }}
 
   get-ksu-manager:
+    if: ${{ inputs.kernelsu_variant != 'ReSukiSU' }}
     uses: ./.github/workflows/get-manager.yml
     secrets: inherit
     with:
