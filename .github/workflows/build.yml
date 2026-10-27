@@ -543,7 +543,7 @@ jobs:
               BRANCH="-s main"
               ;;
             "ReSukiSU")
-              BRANCH="-s v4.2.0-rc3"
+              BRANCH="-s 94dd3c93c2053a84fd752df6eb85db99b7d70ab8"
               ;;
             "SukiSU")
               if [ "${{ inputs.enable_susfs }}" = "false" ]; then
