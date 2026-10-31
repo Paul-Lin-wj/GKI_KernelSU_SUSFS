@@ -935,6 +935,16 @@ jobs:
             echo "::warning::SYSVIPC kABI 补丁应用失败，可能已应用或上下文不匹配"
           fi
 
+          # 6.1 的部分子版本（如 6.1.118）里 ANDROID_KABI_RESERVE(1) 已被
+          # ANDROID_KABI_USE(1, unsigned int saved_state) 占用，上游补丁第二个
+          # hunk 的上下文对不上而被拒绝（只留 .rej），但第一个 hunk 已把原始
+          # sysvsem/sysvshm 字段注释掉。此时若开启 CONFIG_SYSVIPC，ipc/sem.c
+          # 与 kernel/fork.c 会因 task_struct 缺少成员而编译失败，因此这里按
+          # 补丁原意把槽位顺延到 2/3/4 补齐（脚本内部幂等）。
+          if [ "$KERNEL_VER" = "6.1" ]; then
+            bash "$GITHUB_WORKSPACE/scripts/droidspaces_fix/fix_sysvipc_kabi.sh" include/linux/sched.h
+          fi
+
           # 5.10 及以下还需要 POSIX_MQUEUE 的 kABI 修复
           if [ "$KERNEL_VER" = "5.10" ]; then
             echo "应用 Droidspaces POSIX_MQUEUE kABI 修复补丁 (5.10)..."
